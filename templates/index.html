@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Armazenador de arquivos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --background-light: #f8f9fa;
+            --text-dark: #343a40;
+            --text-light: #ffffff;
+            --border-color: #dee2e6;
+            --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-dark);
+            background-color: var(--background-light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background-image: url("{{ url_for('static', filename='background.jpg') }}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            position: relative;
+        }
+
+        
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.7);
+            z-index: -1;
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: var(--box-shadow);
+            max-width: 900px;
+            width: 100%;
+            margin: 40px auto;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 0;
+        }
+
+        h1, h2 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+
+        .upload-form {
+            background-color: var(--background-light);
+            border: 1px solid var(--border-color);
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .upload-form input[type="file"] {
+            display: block;
+            margin: 0 auto 15px auto;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            width: calc(100% - 22px);
+        }
+
+        .upload-form input[type="submit"] {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .upload-form input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        .file-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+
+        .file-list li {
+            background: var(--text-light);
+            border: 1px solid var(--border-color);
+            padding: 12px 20px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: box-shadow 0.2s ease;
+        }
+
+        .file-list li:hover {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        .file-list li span {
+            font-weight: 400;
+            color: var(--text-dark);
+        }
+
+        .download-btn {
+            text-decoration: none;
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background-color: #5a6268;
+        }
+
+        .no-files-message {
+            text-align: center;
+            color: var(--secondary-color);
+            font-style: italic;
+            padding: 20px;
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Aplicação de Upload e Download com S3 (LocalStack)</h1>
+
+        <div class="upload-form">
+            <h2>Fazer Upload de Arquivo</h2>
+            <form action="/upload" method="post" enctype="multipart/form-data">
+                <input type="file" name="file" required>
+                <input type="submit" value="Enviar">
+            </form>
+        </div>
+
+        <h2>Arquivos no Bucket: <code>meu-balde-de-arquivos</code></h2>
+        {% if files %}
+            <ul class="file-list">
+                {% for file in files %}
+                    <li>
+                        <span>{{ file }}</span>
+                        <a href="/download/{{ file }}" class="download-btn">Download</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="no-files-message">Nenhum arquivo encontrado no bucket. Faça o upload do seu primeiro arquivo!</p>
+        {% endif %}
+    </div>
+</body>
+</html>
