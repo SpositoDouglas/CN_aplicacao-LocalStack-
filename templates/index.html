@@ -3,155 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Armazenador de arquivos</title>
+    <title>Upload/Download S3 (LocalStack)</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #007bff;
-            --secondary-color: #6c757d;
-            --background-light: #f8f9fa;
-            --text-dark: #343a40;
-            --text-light: #ffffff;
-            --border-color: #dee2e6;
+            --primary-color: #007bff; --secondary-color: #6c757d; --danger-color: #dc3545; 
+            --background-light: #f8f9fa; --text-dark: #343a40; --text-light: #ffffff; --border-color: #dee2e6; 
             --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            color: var(--text-dark);
-            background-color: var(--background-light);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            background-image: url("{{ url_for('static', filename='background.jpg') }}");
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            position: relative;
+        body { 
+            font-family: 'Roboto', sans-serif; margin: 0; padding: 0; color: var(--text-dark); 
+            background-color: var(--background-light); min-height: 100vh; display: flex; justify-content: center; 
+            align-items: flex-start; background-image: url("{{ url_for('static', filename='background.jpg') }}"); background-size: cover; 
+            background-position: center; background-attachment: fixed; position: relative; 
         }
 
+        body::before { 
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background-color: rgba(255, 255, 255, 0.7); z-index: -1; 
+        }
+
+        .container { 
+            background-color: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 10px; box-shadow: var(--box-shadow); 
+            max-width: 900px; width: 100%; margin: 40px auto; box-sizing: border-box; position: relative; z-index: 0; 
+        }
+
+        .header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 25px; 
+        }
+
+        .header h1 { 
+            color: var(--primary-color); text-align: left; 
+            margin: 0; font-size: 1.8rem; 
+        }
+
+        .header-right { 
+            text-align: right; 
+        }
+
+        .header-right span {
+             display: block; margin-bottom: 5px; color: #555; 
+        }
+
+        .logout-btn { 
+            text-decoration: none; background-color: var(--danger-color); 
+            color: var(--text-light); padding: 8px 15px; border-radius: 5px; transition: background-color 0.3s ease; 
+        }
+
+        .logout-btn:hover { 
+            background-color: #c82333; 
+        }
+
+        h2 { 
+            color: var(--primary-color); text-align: center; margin-bottom: 25px; font-weight: 700; 
+        }
         
-        body::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.7);
-            z-index: -1;
+        .upload-form { 
+            background-color: var(--background-light); border: 1px solid var(--border-color); 
+            padding: 25px; border-radius: 8px; margin-bottom: 30px; text-align: center;
         }
 
-        .container {
-            background-color: rgba(255, 255, 255, 0.95);
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: var(--box-shadow);
-            max-width: 900px;
-            width: 100%;
-            margin: 40px auto;
-            box-sizing: border-box;
-            position: relative;
-            z-index: 0;
+        .upload-form input[type="file"] { 
+            display: block; margin: 0 auto 15px auto; padding: 10px; 
+            border: 1px solid var(--border-color); border-radius: 5px; width: calc(100% - 22px); 
         }
 
-        h1, h2 {
-            color: var(--primary-color);
-            text-align: center;
-            margin-bottom: 25px;
-            font-weight: 700;
+        .upload-form input[type="submit"] { 
+            background-color: var(--primary-color); color: var(--text-light); 
+            border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1rem;
+            transition: background-color 0.3s ease; 
         }
 
-        .upload-form {
-            background-color: var(--background-light);
-            border: 1px solid var(--border-color);
-            padding: 25px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            text-align: center;
+        .upload-form input[type="submit"]:hover { 
+            background-color: #0056b3; 
         }
 
-        .upload-form input[type="file"] {
-            display: block;
-            margin: 0 auto 15px auto;
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            width: calc(100% - 22px);
+        .file-list { 
+            list-style: none; padding: 0; margin-top: 20px; 
         }
 
-        .upload-form input[type="submit"] {
-            background-color: var(--primary-color);
-            color: var(--text-light);
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: background-color 0.3s ease;
+        .file-list li { 
+            background: var(--text-light); border: 1px solid var(--border-color); padding: 12px 20px; 
+            margin-bottom: 8px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; 
+            transition: box-shadow 0.2s ease; 
         }
 
-        .upload-form input[type="submit"]:hover {
-            background-color: #0056b3;
-        }
-
-        .file-list {
-            list-style: none;
-            padding: 0;
-            margin-top: 20px;
-        }
-
-        .file-list li {
-            background: var(--text-light);
-            border: 1px solid var(--border-color);
-            padding: 12px 20px;
-            margin-bottom: 8px;
-            border-radius: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: box-shadow 0.2s ease;
-        }
-
-        .file-list li:hover {
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        .file-list li:hover { 
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08); 
         }
 
         .file-list li span {
-            font-weight: 400;
-            color: var(--text-dark);
+             font-weight: 400; color: var(--text-dark); 
         }
 
-        .download-btn {
-            text-decoration: none;
-            background-color: var(--secondary-color);
-            color: var(--text-light);
-            padding: 8px 15px;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            transition: background-color 0.3s ease;
+        .download-btn { 
+            text-decoration: none; background-color: var(--secondary-color); color: var(--text-light); 
+            padding: 8px 15px; border-radius: 5px; font-size: 0.9rem; transition: background-color 0.3s ease; 
         }
 
-        .download-btn:hover {
-            background-color: #5a6268;
+        .download-btn:hover { 
+            background-color: #5a6268; 
         }
 
-        .no-files-message {
-            text-align: center;
-            color: var(--secondary-color);
-            font-style: italic;
-            padding: 20px;
-            border: 1px dashed var(--border-color);
-            border-radius: 8px;
+        .no-files-message { 
+            text-align: center; color: var(--secondary-color); font-style: italic; 
+            padding: 20px; border: 1px dashed var(--border-color); border-radius: 8px; 
+        }
+
+        .flash-messages { 
+            list-style: none; padding: 0; margin-bottom: 20px; 
+        }
+
+        .flash-messages li { 
+            padding: 10px; border-radius: 5px; margin-bottom: 10px; 
+        }
+
+        .flash-success { 
+            background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; 
+        }
+
+        .flash-warning { 
+            background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; 
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Aplicação de Upload e Download com S3 (LocalStack)</h1>
+        <div class="header">
+            <h1>S3 Storage</h1>
+            <div class="header-right">
+                <span>Logado como: <strong>{{ user_email }}</strong></span>
+                <a href="/logout" class="logout-btn">Sair</a>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <ul class="flash-messages">
+              {% for category, message in messages %}
+                <li class="flash-{{ category }}">{{ message }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
 
         <div class="upload-form">
             <h2>Fazer Upload de Arquivo</h2>
